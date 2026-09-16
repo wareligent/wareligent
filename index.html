@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wareligent - Search Engine</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #ffffff; color: #202124; }
+        header { display: flex; justify-content: flex-end; padding: 20px; font-size: 14px; }
+        header a { margin-left: 15px; color: #5f6368; text-decoration: none; }
+        header a:hover { text-decoration: underline; }
+        .main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .logo { font-size: 5rem; font-weight: bold; margin-bottom: 30px; letter-spacing: -2px; }
+        .logo span:nth-child(1) { color: #4285F4; } /* W */
+        .logo span:nth-child(2) { color: #EA4335; } /* a */
+        .logo span:nth-child(3) { color: #FBBC05; } /* r */
+        .logo span:nth-child(4) { color: #4285F4; } /* e */
+        .logo span:nth-child(5) { color: #34A853; } /* l */
+        .logo span:nth-child(6) { color: #EA4335; } /* i */
+        .logo span:nth-child(7) { color: #FBBC05; } /* g */
+        .logo span:nth-child(8) { color: #4285F4; } /* e */
+        .logo span:nth-child(9) { color: #34A853; } /* n */
+        .logo span:nth-child(10) { color: #EA4335; } /* t */
+        .search-box-wrapper { width: 100%; max-width: 584px; position: relative; margin-bottom: 30px; }
+        .search-box { width: 100%; padding: 14px 20px; font-size: 16px; border: 1px solid #dfe1e5; border-radius: 24px; outline: none; transition: box-shadow 0.2s; }
+        .search-box:hover, .search-box:focus { box-shadow: 0 1px 6px rgba(32,33,36,0.28); border-color: rgba(223,225,229,0); }
+        .buttons-wrapper { display: flex; gap: 12px; }
+        .btn { padding: 10px 16px; font-size: 14px; color: #3c4043; background-color: #f8f9fa; border: 1px solid #f8f9fa; border-radius: 4px; cursor: pointer; outline: none; }
+        .btn:hover { border: 1px solid #dadce0; color: #202124; background-color: #f8f9fa; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .results-container { width: 100%; max-width: 652px; margin-top: 30px; text-align: left; display: none; }
+        .result-item { margin-bottom: 25px; padding: 10px; border-radius: 8px; transition: background 0.2s; }
+        .result-item:hover { background-color: #f8f9fa; }
+        .result-url { font-size: 12px; color: #202124; margin-bottom: 4px; display: block; }
+        .result-title { font-size: 20px; color: #1a0dab; text-decoration: none; display: inline-block; margin-bottom: 6px; }
+        .result-title:hover { text-decoration: underline; }
+        .result-desc { font-size: 14px; color: #4d5156; line-height: 1.5; }
+        footer { background: #f2f2f2; font-size: 14px; color: #70757a; padding: 15px 30px; border-top: 1px solid #e4e4e4; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="#">Wareligent Mail</a>
+        <a href="#">Images</a>
+    </header>
+
+    <div class="main-container">
+        <!-- Colorful Logo -->
+        <div class="logo" id="logo-trig">
+            <span>W</span><span>a</span><span>r</span><span>e</span><span>l</span><span>i</span><span>g</span><span>e</span><span>n</span><span>t</span>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-box-wrapper">
+            <input type="text" class="search-box" id="search-input" placeholder="Wareligent-এ সার্চ করুন..." autocomplete="off">
+        </div>
+
+        <div class="buttons-wrapper" id="buttons-area">
+            <button class="btn" onclick="executeSearch()">Wareligent Search</button>
+            <button class="btn" onclick="luckySearch()">I'm Feeling Lucky</button>
+        </div>
+
+        <!-- Search Results Area -->
+        <div class="results-container" id="results-box"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Wareligent Inc. | Bangladesh</p>
+    </footer>
+
+    <script>
+        // ডেমো ডেটাবেজ (সার্চ রেজাল্ট)
+        const mockData = [
+            { title: "Wareligent - অফিসিয়াল ওয়েবসাইট", url: "https://wareligent.com", desc: "Wareligent হলো আগামী প্রজন্মের দ্রুতগতির এবং এআই চালিত ডেমো সার্চ ইঞ্জিন প্ল্যাটফর্ম।" },
+            { title: "How to Build a Search Engine", url: "https://wareligent.com", desc: "নিজে নিজে কীভাবে একটি সার্চ ইঞ্জিন তৈরি করা যায় তা ধাপে ধাপে শিখুন HTML এবং JavaScript ব্যবহার করে।" },
+            { title: "Vercel Hosting Guide 2026", url: "https://vercel.com", desc: "আপনার ফ্রন্টএন্ড প্রজেক্টগুলো Vercel-এ ১ মিনিটে সম্পূর্ণ ফ্রিতে হোস্টিং ও লাইভ করার অফিশিয়াল নিয়মাবলী।" },
+            { title: "বাংলাদেশ আইটি ইন্ডাস্ট্রি আপডেট", url: "https://wareligent.com", desc: "বাংলাদেশের প্রযুক্তি খাতে নতুন উদ্ভাবন এবং তরুণ ডেভেলপারদের জন্য ফ্রিল্যান্সিং ও স্টার্টআপ গাইডলাইন।" }
+        ];
+
+        function executeSearch() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            const resultsBox = document.getElementById('results-box');
+            
+            if (query === "") {
+                resultsBox.style.display = "none";
+                alert("দয়া করে কিছু লিখে সার্চ করুন!");
+                return;
+            }
+
+            // সার্চ ফিল্টারিং লজিক
+            const filteredResults = mockData.filter(item => 
+                item.title.toLowerCase().includes(query) || 
+                item.desc.toLowerCase().includes(query)
+            );
+
+            // রেজাল্ট রেন্ডারিং
+            resultsBox.innerHTML = "";
+            if (filteredResults.length > 0) {
+                filteredResults.forEach(item => {
+                    resultsBox.innerHTML += `
+                        <div class="result-item">
+                            <span class="result-url">${item.url}</span>
+                            <a href="${item.url}" target="_blank" class="result-title">${item.title}</a>
+                            <p class="result-desc">${item.desc}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                resultsBox.innerHTML = `
+                    <div class="result-item">
+                        <p class="result-desc" style="color: red;">"${query}" এর জন্য কোনো তথ্য পাওয়া যায়নি। (ডেমো হিসেবে 'wareligent' অথবা 'vercel' লিখে সার্চ করে দেখতে পারেন)</p>
+                    </div>
+                `;
+            }
+            resultsBox.style.display = "block";
+        }
+
+        // এন্টার চাপলে সার্চ হবে
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { executeSearch(); }
+        });
+
+        function luckySearch() {
+            alert("আপনি ভাগ্যবান! Wareligent আপনাকে সেরা ডেমো পেজে নিয়ে যাচ্ছে।");
+            window.open("https://wareligent.com", "_blank");
+        }
+    </script>
+</body>
+</html>
