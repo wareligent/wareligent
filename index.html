@@ -4,127 +4,422 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wareligent - Search Engine</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #ffffff; color: #202124; }
-        header { display: flex; justify-content: flex-end; padding: 20px; font-size: 14px; }
-        header a { margin-left: 15px; color: #5f6368; text-decoration: none; }
-        header a:hover { text-decoration: underline; }
-        .main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .logo { font-size: 5rem; font-weight: bold; margin-bottom: 30px; letter-spacing: -2px; }
-        .logo span:nth-child(1) { color: #4285F4; } /* W */
-        .logo span:nth-child(2) { color: #EA4335; } /* a */
-        .logo span:nth-child(3) { color: #FBBC05; } /* r */
-        .logo span:nth-child(4) { color: #4285F4; } /* e */
-        .logo span:nth-child(5) { color: #34A853; } /* l */
-        .logo span:nth-child(6) { color: #EA4335; } /* i */
-        .logo span:nth-child(7) { color: #FBBC05; } /* g */
-        .logo span:nth-child(8) { color: #4285F4; } /* e */
-        .logo span:nth-child(9) { color: #34A853; } /* n */
-        .logo span:nth-child(10) { color: #EA4335; } /* t */
-        .search-box-wrapper { width: 100%; max-width: 584px; position: relative; margin-bottom: 30px; }
-        .search-box { width: 100%; padding: 14px 20px; font-size: 16px; border: 1px solid #dfe1e5; border-radius: 24px; outline: none; transition: box-shadow 0.2s; }
-        .search-box:hover, .search-box:focus { box-shadow: 0 1px 6px rgba(32,33,36,0.28); border-color: rgba(223,225,229,0); }
-        .buttons-wrapper { display: flex; gap: 12px; }
-        .btn { padding: 10px 16px; font-size: 14px; color: #3c4043; background-color: #f8f9fa; border: 1px solid #f8f9fa; border-radius: 4px; cursor: pointer; outline: none; }
-        .btn:hover { border: 1px solid #dadce0; color: #202124; background-color: #f8f9fa; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-        .results-container { width: 100%; max-width: 652px; margin-top: 30px; text-align: left; display: none; }
-        .result-item { margin-bottom: 25px; padding: 10px; border-radius: 8px; transition: background 0.2s; }
-        .result-item:hover { background-color: #f8f9fa; }
-        .result-url { font-size: 12px; color: #202124; margin-bottom: 4px; display: block; }
-        .result-title { font-size: 20px; color: #1a0dab; text-decoration: none; display: inline-block; margin-bottom: 6px; }
-        .result-title:hover { text-decoration: underline; }
-        .result-desc { font-size: 14px; color: #4d5156; line-height: 1.5; }
-        footer { background: #f2f2f2; font-size: 14px; color: #70757a; padding: 15px 30px; border-top: 1px solid #e4e4e4; text-align: center; }
+        /* CSS Styles */
+        :root {
+            --bg-color: #fcfcfd;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-color: #2563eb;
+            --border-color: #e2e8f0;
+            --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+            --shadow-hover: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Subtle Background Glow */
+        .bg-glow {
+            position: absolute;
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37,99,235,0.06) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 5%;
+            width: 100%;
+        }
+
+        .logo-small {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .logo-icon {
+            font-size: 1.4rem;
+            color: var(--text-main);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text-main);
+        }
+
+        .nav-links a.active {
+            border-bottom: 2px solid var(--text-main);
+            padding-bottom: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-main);
+        }
+
+        /* Main Content */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: auto 0;
+            width: 100%;
+            max-width: 900px;
+            align-self: center;
+        }
+
+        /* Hero Brand */
+        .hero-brand {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .main-logo {
+            font-size: 3.5rem;
+            margin-bottom: 5px;
+            color: var(--text-main);
+            display: inline-block;
+        }
+
+        .brand-name {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .tagline {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Search Bar */
+        .search-container {
+            width: 100%;
+            max-width: 680px;
+            position: relative;
+            margin-bottom: 45px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 18px 55px 18px 55px;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            font-size: 1.05rem;
+            color: var(--text-main);
+            outline: none;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: #cbd5e1;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        .search-box::placeholder {
+            color: #94a3b8;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 22px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .mic-icon {
+            position: absolute;
+            right: 22px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .mic-icon:hover {
+            color: var(--accent-color);
+        }
+
+        /* Feature Cards Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 720px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 22px 15px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: #bfdbfe;
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: var(--accent-color);
+            color: #ffffff;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            padding: 25px 5%;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            background: var(--card-bg);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .brand-name {
+                font-size: 2.2rem;
+            }
+
+            .main-logo {
+                font-size: 2.8rem;
+            }
+
+            .tagline {
+                font-size: 0.75rem;
+            }
+        }
     </style>
 </head>
 <body>
 
+    <div class="bg-glow"></div>
+
+    <!-- Header Navigation -->
     <header>
-        <a href="#">Wareligent Mail</a>
-        <a href="#">Images</a>
+        <a href="#" class="logo-small">
+            <i class="fa-solid fa-layer-group logo-icon"></i>
+            <span>wareligent</span>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="#" class="active">Web</a></li>
+            <li><a href="#">Images</a></li>
+            <li><a href="#">Videos</a></li>
+            <li><a href="#">News</a></li>
+            <li><a href="#">More <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i></a></li>
+        </ul>
+
+        <div class="header-actions">
+            <button class="icon-btn" title="Toggle Theme"><i class="fa-regular fa-moon"></i></button>
+            <button class="icon-btn" title="User Profile"><i class="fa-regular fa-user"></i></button>
+        </div>
     </header>
 
-    <div class="main-container">
-        <!-- Colorful Logo -->
-        <div class="logo" id="logo-trig">
-            <span>W</span><span>a</span><span>r</span><span>e</span><span>l</span><span>i</span><span>g</span><span>e</span><span>n</span><span>t</span>
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <div class="hero-brand">
+            <div class="main-logo">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h1 class="brand-name">wareligent</h1>
+            <p class="tagline">The Search Engine for a Smarter Tomorrow</p>
         </div>
 
         <!-- Search Bar -->
-        <div class="search-box-wrapper">
-            <input type="text" class="search-box" id="search-input" placeholder="Wareligent-এ সার্চ করুন..." autocomplete="off">
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" class="search-box" placeholder="Search anything..." autofocus>
+            <i class="fa-solid fa-microphone mic-icon" title="Voice Search"></i>
         </div>
 
-        <div class="buttons-wrapper" id="buttons-area">
-            <button class="btn" onclick="executeSearch()">Wareligent Search</button>
-            <button class="btn" onclick="luckySearch()">I'm Feeling Lucky</button>
+        <!-- Category Grid -->
+        <div class="features-grid">
+            <a href="#" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div class="feature-title">Web</div>
+                <div class="feature-desc">Real-time results</div>
+            </a>
+
+            <a href="#" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fa-regular fa-image"></i>
+                </div>
+                <div class="feature-title">Images</div>
+                <div class="feature-desc">Visual search</div>
+            </a>
+
+            <a href="#" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fa-regular fa-circle-play"></i>
+                </div>
+                <div class="feature-title">Videos</div>
+                <div class="feature-desc">Watch instantly</div>
+            </a>
+
+            <a href="#" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fa-regular fa-newspaper"></i>
+                </div>
+                <div class="feature-title">News</div>
+                <div class="feature-desc">Trusted sources</div>
+            </a>
         </div>
+    </main>
 
-        <!-- Search Results Area -->
-        <div class="results-container" id="results-box"></div>
-    </div>
-
+    <!-- Footer -->
     <footer>
-        <p>&copy; 2026 Wareligent Inc. | Bangladesh</p>
+        <div class="footer-links">
+            <span>FASTER</span>
+            <span>/</span>
+            <span>SMARTER</span>
+            <span>/</span>
+            <span>WORLDWIDE</span>
+        </div>
     </footer>
 
+    <!-- Simple Search Event Script -->
     <script>
-        // ডেমো ডেটাবেজ (সার্চ রেজাল্ট)
-        const mockData = [
-            { title: "Wareligent - অফিসিয়াল ওয়েবসাইট", url: "https://wareligent.com", desc: "Wareligent হলো আগামী প্রজন্মের দ্রুতগতির এবং এআই চালিত ডেমো সার্চ ইঞ্জিন প্ল্যাটফর্ম।" },
-            { title: "How to Build a Search Engine", url: "https://wareligent.com", desc: "নিজে নিজে কীভাবে একটি সার্চ ইঞ্জিন তৈরি করা যায় তা ধাপে ধাপে শিখুন HTML এবং JavaScript ব্যবহার করে।" },
-            { title: "Vercel Hosting Guide 2026", url: "https://vercel.com", desc: "আপনার ফ্রন্টএন্ড প্রজেক্টগুলো Vercel-এ ১ মিনিটে সম্পূর্ণ ফ্রিতে হোস্টিং ও লাইভ করার অফিশিয়াল নিয়মাবলী।" },
-            { title: "বাংলাদেশ আইটি ইন্ডাস্ট্রি আপডেট", url: "https://wareligent.com", desc: "বাংলাদেশের প্রযুক্তি খাতে নতুন উদ্ভাবন এবং তরুণ ডেভেলপারদের জন্য ফ্রিল্যান্সিং ও স্টার্টআপ গাইডলাইন।" }
-        ];
-
-        function executeSearch() {
-            const query = document.getElementById('search-input').value.trim().toLowerCase();
-            const resultsBox = document.getElementById('results-box');
-            
-            if (query === "") {
-                resultsBox.style.display = "none";
-                alert("দয়া করে কিছু লিখে সার্চ করুন!");
-                return;
+        const searchInput = document.querySelector('.search-box');
+        
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && this.value.trim() !== '') {
+                alert('Searching for: ' + this.value);
+                // Here you can redirect to search results page
+                // window.location.href = `https://www.google.com/search?q=${encodeURIComponent(this.value)}`;
             }
-
-            // সার্চ ফিল্টারিং লজিক
-            const filteredResults = mockData.filter(item => 
-                item.title.toLowerCase().includes(query) || 
-                item.desc.toLowerCase().includes(query)
-            );
-
-            // রেজাল্ট রেন্ডারিং
-            resultsBox.innerHTML = "";
-            if (filteredResults.length > 0) {
-                filteredResults.forEach(item => {
-                    resultsBox.innerHTML += `
-                        <div class="result-item">
-                            <span class="result-url">${item.url}</span>
-                            <a href="${item.url}" target="_blank" class="result-title">${item.title}</a>
-                            <p class="result-desc">${item.desc}</p>
-                        </div>
-                    `;
-                });
-            } else {
-                resultsBox.innerHTML = `
-                    <div class="result-item">
-                        <p class="result-desc" style="color: red;">"${query}" এর জন্য কোনো তথ্য পাওয়া যায়নি। (ডেমো হিসেবে 'wareligent' অথবা 'vercel' লিখে সার্চ করে দেখতে পারেন)</p>
-                    </div>
-                `;
-            }
-            resultsBox.style.display = "block";
-        }
-
-        // এন্টার চাপলে সার্চ হবে
-        document.getElementById('search-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { executeSearch(); }
         });
-
-        function luckySearch() {
-            alert("আপনি ভাগ্যবান! Wareligent আপনাকে সেরা ডেমো পেজে নিয়ে যাচ্ছে।");
-            window.open("https://wareligent.com", "_blank");
-        }
     </script>
 </body>
 </html>
