@@ -83,30 +83,50 @@
         const SUPABASE_ANON_KEY = "sb_publishable_HkyRE170ylT0kkdZxbwUSQ_ihHrS_Ra";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- DATABASE INSERT FUNCTION ---
-        async function saveSearchWordToDatabase(word) {
-            if (!word) return;
-            const cleanWord = word.trim().toLowerCase();
+        // --- DATABASE INSERT & COUNT UPDATE FUNCTION ---
+async function saveSearchWordToDatabase(word) {
+    if (!word) return;
+    const cleanWord = word.trim().toLowerCase();
 
-            // খালি শব্দ বা ২ অক্ষরের চেয়ে ছোট লেখা বাদ দেওয়া
-            if (!cleanWord || cleanWord.length < 2) {
-                return;
-            }
+    // খালি বা ছোট শব্দ বাদ
+    if (!cleanWord || cleanWord.length < 2) {
+        return;
+    }
 
-            try {
-                const { data, error } = await supabaseClient
-                    .from("search_suggestions")
-                    .upsert([{ keyword: cleanWord }], { onConflict: "keyword" });
+    try {
+        // ১. চেক করা শব্দটা ডাটাবেজে আগে থেকে আছে কি না
+        const { data, error } = await supabaseClient
+            .from("search_suggestions")
+            .select("id, search_count")
+            .eq("keyword", cleanWord)
+            .maybeSingle();
 
-                if (error) {
-                    console.error("Supabase Save Error:", error.message);
-                } else {
-                    console.log("Database Save Success:", cleanWord);
-                }
-            } catch (err) {
-                console.error("Database Save Exception:", err);
-            }
+        if (error) {
+            console.error("Supabase Select Error:", error.message);
+            return;
         }
+
+        if (data) {
+            // ২. শব্দ থাকলে আগের কাউন্ট-এর সাথে ১ যোগ করা
+            const newCount = (data.search_count || 1) + 1;
+            await supabaseClient
+                .from("search_suggestions")
+                .update({ search_count: newCount })
+                .eq("id", data.id);
+            
+            console.log(`Updated count for "${cleanWord}": ${newCount}`);
+        } else {
+            // ৩. শব্দ না থাকলে নতুন রো তৈরি করা (count = 1)
+            await supabaseClient
+                .from("search_suggestions")
+                .insert([{ keyword: cleanWord, search_count: 1 }]);
+            
+            console.log(`Added new word "${cleanWord}" with count 1`);
+        }
+    } catch (err) {
+        console.error("Database Save Exception:", err);
+    }
+}
 
         // --- DOM ELEMENTS ---
         const searchInput = document.getElementById('searchInput');
