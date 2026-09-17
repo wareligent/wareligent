@@ -4,40 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wareligent Search</title>
-    <!-- CSS লিংক নিশ্চিত করুন -->
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="light-theme">
 
-    <button id="themeToggleBtn" class="theme-toggle" title="Toggle Theme">
-        <span id="themeIcon">🌙</span>
-    </button>
+    <!-- হেডার এরিয়া -->
+    <header class="top-header">
+        <div class="nav-links">
+            <a href="#" class="nav-item">Wareligent.com</a>
+        </div>
+        <div class="header-actions">
+            <button id="themeToggleBtn" class="icon-btn" title="Toggle Theme">🌙</button>
+        </div>
+    </header>
 
-    <div class="main-container">
-        <h1 class="brand-logo">wareligent</h1>
+    <main class="main-content">
+        <!-- ব্রান্ড লোগো -->
+        <h1 class="brand-logo">wareligent<span>!</span></h1>
 
-        <!-- সার্চ বক্স -->
-        <div class="search-box-container">
-            <div class="search-input-wrapper">
-                <span class="search-icon">🔍</span>
+        <!-- পিল-শেপড সার্চ বক্স -->
+        <div class="search-box-wrapper">
+            <div class="search-input-box">
                 <input type="text" id="searchInput" placeholder="Search the web with Wareligent..." autocomplete="off">
-                <button id="voiceBtn" class="action-btn" title="Voice Search">🎙️</button>
-                <button id="clearBtn" class="action-btn" style="display: none;">✕</button>
+                <button id="clearBtn" class="clear-btn" style="display: none;">✕</button>
+                <button id="voiceBtn" class="voice-btn" title="Voice Search">🎙️</button>
+                <button id="searchBtn" class="search-btn">🔍</button>
             </div>
+            <!-- অটো-সাজেস্ট ড্রপডাউন -->
             <ul id="suggestionsList" class="suggestions-dropdown"></ul>
         </div>
 
-        <!-- ফিল্টার ট্যাব -->
+        <!-- ফিল্টার ট্যাব (সার্চের পর আসবে) -->
         <div class="search-tabs" id="searchTabs" style="display: none;">
-            <button class="tab-btn active" data-type="all">All</button>
-            <button class="tab-btn" data-type="images">Images</button>
-            <button class="tab-btn" data-type="news">News</button>
+            <button class="tab-btn active">All</button>
+            <button class="tab-btn">Images</button>
+            <button class="tab-btn">News</button>
         </div>
 
-        <!-- রেজাল্ট সেকশন -->
-        <div id="resultsContainer" class="results-wrapper"></div>
-    </div>
+        <!-- ট্রেন্ডিং টপিক সেকশন (Yahoo Style) -->
+        <section class="trending-section" id="trendingSection">
+            <h2 class="trending-title">Trending Now 🔥</h2>
+            <ol class="trending-list" id="trendingList">
+                <li><span>Tech Innovations 2026</span><span class="search-icon-small">🔍</span></li>
+                <li><span>Wareligent Cloud Search</span><span class="search-icon-small">🔍</span></li>
+                <li><span>Global Gaming Championship</span><span class="search-icon-small">🔍</span></li>
+                <li><span>Artificial Intelligence News</span><span class="search-icon-small">🔍</span></li>
+                <li><span>Next.js & Web Development</span><span class="search-icon-small">🔍</span></li>
+            </ol>
+        </section>
 
-    <script src="./script.js"></script>
+        <!-- ফলাফল ডোমেইন -->
+        <div id="resultsContainer" class="results-wrapper"></div>
+    </main>
+
+    <script src="script.js"></script>
 </body>
 </html>
