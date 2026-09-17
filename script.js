@@ -143,39 +143,47 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.onend = () => { voiceBtn.style.color = ''; };
 }
 
-// 7. Search Execution and Advanced Results Display (Smart Web Redirection Attached)
+// 7. Search Execution and Smart Website Redirection
 async function executeSearch(queryStr) {
     const query = (typeof queryStr === 'string' && queryStr.trim() !== '') ? queryStr.trim() : searchInput.value.trim();
     suggestionsList.innerHTML = '';
     
     if (!query) return;
 
-    // ট্রিক ১: ইউজার যদি সরাসরি ডোমেইন নাম লেখে (যেমন: facebook.com), তবে সরাসরি সাইটে নিয়ে যাবে
-    const urlPattern = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}\$/;
-    if (urlPattern.test(query)) {
-        window.open(`https://${query}`, '_blank');
+    // ১. চেক করা ইউজার সরাসরি ডোমেইন নাম বা URL লিখেছেন কি না (যেমন: facebook.com, http://example.com)
+    const isDomain = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/.test(query);
+    const hasProtocol = /^https?:\/\//i.test(query);
+
+    // ২. যদি সরাসরি ওয়েবসাইট লেখা হয়, তবে ওই সাইটে নিয়ে যাবে
+    if (isDomain || hasProtocol) {
+        let finalUrl = query;
+        if (!hasProtocol) {
+            finalUrl = `https://${query}`; // https না থাকলে যুক্ত করে নেওয়া
+        }
+        window.open(finalUrl, '_blank'); // নতুন ট্যাবে ওয়েবসাইট ওপেন হবে
         return;
     }
 
+    // ৩. যদি ওয়েবসাইট না হয়ে সাধারণ কোনো সার্চ কিওয়ার্ড হয়:
     trendingBox.style.display = 'none';
     categoryTabs.style.display = 'flex';
     resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Searching for "${query}"...</p>`;
 
-    // ট্রিক ২: ব্যাকগ্রাউন্ডে গুগলের ফুল সার্চ রেজাল্ট পেজটি নতুন ট্যাবে ওপেন করে দেওয়া
-    window.open(`https://google.com{encodeURIComponent(query)}`, '_blank');
+    // ব্যাকগ্রাউন্ডে গুগলে সার্চ করার জন্য লিংক
+    const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 
     try {
         const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&origin=*`);
         const data = await res.json();
         resultsWrapper.innerHTML = '';
 
-        // সাইটের ভেতরে মূল ইনফরমেশন বা উইকিপিডিয়া কার্ড দেখানো
+        // ইনস্ট্যান্ট অ্যান্সার / উইকিপিডিয়া কার্ড
         if (data.AbstractText) {
             const card = document.createElement('div');
             card.className = 'result-card';
             card.innerHTML = `
                 <div class="result-header">
-                    <img src="https://google.com" class="site-icon" alt="">
+                    <img src="https://www.google.com/s2/favicons?domain=${new URL(data.AbstractURL).hostname}&sz=32" class="site-icon" alt="">
                     <span class="site-url">${data.AbstractSource || 'Instant Answer'}</span>
                 </div>
                 <a href="${data.AbstractURL}" target="_blank" class="result-title">${data.Heading || query}</a>
@@ -184,7 +192,7 @@ async function executeSearch(queryStr) {
             resultsWrapper.appendChild(card);
         }
 
-        // রিলেটেড টপিকস বা ওয়েবসাইট কার্ড দেখানো
+        // সম্পর্কিত টপিক বা ওয়েবসাইট লিংক কার্ড
         if (data.RelatedTopics && data.RelatedTopics.length > 0) {
             data.RelatedTopics.slice(0, 5).forEach(topic => {
                 if (topic.Text && topic.FirstURL) {
@@ -204,14 +212,22 @@ async function executeSearch(queryStr) {
             });
         }
 
+        // যদি রেজাল্ট না পাওয়া যায়
         if (resultsWrapper.innerHTML === '') {
             resultsWrapper.innerHTML = `
                 <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
-                    Instant results loaded in a new tab. <br>
-                    <a href="https://google.com{encodeURIComponent(query)}" target="_blank" style="color: var(--accent-color); text-decoration: underline;">Click here</a> if it didn't open automatically.
+                    No instant overview available. <br>
+                    <a href="${googleSearchUrl}" target="_blank" style="color: var(--accent-color); text-decoration: underline;">
+                        Click here to search on Google
+                    </a>
                 </p>`;
         }
     } catch (err) {
-        resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Results opened in a new window.</p>`;
+        resultsWrapper.innerHTML = `
+            <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                <a href="${googleSearchUrl}" target="_blank" style="color: var(--accent-color); text-decoration: underline;">
+                    Search "${query}" on Google
+                </a>
+            </p>`;
     }
 }
