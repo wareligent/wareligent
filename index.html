@@ -2,28 +2,33 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="google-site-verification" content="jtOri-08JOo4FRPGJNtPLuNYGFZOGe4iuoDu6Os0ATM" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wareligent Search</title>
+    <title>Wareligent</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="light-theme">
+
+    <!-- থিম টগল বাটন -->
+    <button id="themeToggleBtn" class="theme-toggle" title="Toggle Theme">
+        <span id="themeIcon">🌙</span>
+    </button>
 
     <div class="main-container">
-        <!-- ব্র্যান্ড লোগো -->
+        <!-- Google/Bing স্টাইল লোগো -->
         <h1 class="brand-logo">wareligent</h1>
 
-        <!-- সার্চ বক্স সেকশন -->
+        <!-- সার্চ বার -->
         <div class="search-box-container">
             <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" placeholder="Search the web with Wareligent..." autocomplete="off">
-                <button id="searchBtn" type="button">🔍</button>
+                <button id="clearBtn" class="clear-btn" style="display: none;">✕</button>
             </div>
-            <!-- লাইভ অটো-সাজেশন -->
+            <!-- অটো-সাজেস্ট ড্রপডাউন -->
             <ul id="suggestionsList" class="suggestions-dropdown"></ul>
         </div>
 
-        <!-- ফলাফল প্রদর্শন -->
+        <!-- ফলাফল ডোমেইন -->
         <div id="resultsContainer" class="results-wrapper"></div>
     </div>
 
