@@ -1,41 +1,81 @@
 const searchInput = document.getElementById('searchInput');
 const suggestionsList = document.getElementById('suggestionsList');
-const resultsContainer = document.getElementById('resultsContainer');
-const trendingSection = document.getElementById('trendingSection');
+const resultsWrapper = document.getElementById('resultsWrapper');
+const trendingBox = document.getElementById('trendingBox');
+const categoryTabs = document.getElementById('categoryTabs');
 const themeToggleBtn = document.getElementById('themeToggleBtn');
+const themeIcon = document.getElementById('themeIcon');
 const clearBtn = document.getElementById('clearBtn');
 const voiceBtn = document.getElementById('voiceBtn');
-const searchBtn = document.getElementById('searchBtn');
 
-// ১. থিম টগল (Light / Dark)
+let selectedIndex = -1;
+let debounceTimer;
+
+// ১. ডার্ক/লাইট থিম সুইচ
 themeToggleBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
     document.body.classList.toggle('light-theme');
-    themeToggleBtn.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+    themeIcon.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
 });
 
-// ২. ইনপুট হ্যান্ডলিং ও ক্লিয়ার বাটন
+// ২. ইনপুট ও ক্লিয়ার বাটন
 searchInput.addEventListener('input', function() {
     const query = this.value.trim();
     clearBtn.style.display = query ? 'block' : 'none';
+    selectedIndex = -1;
 
     if (!query) {
         suggestionsList.innerHTML = '';
         return;
     }
 
-    fetchSuggestions(query);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        fetchSuggestions(query);
+    }, 200);
 });
 
 clearBtn.addEventListener('click', () => {
     searchInput.value = '';
     clearBtn.style.display = 'none';
     suggestionsList.innerHTML = '';
-    resultsContainer.innerHTML = '';
-    trendingSection.style.display = 'block';
+    resultsWrapper.innerHTML = '';
+    categoryTabs.style.display = 'none';
+    trendingBox.style.display = 'block';
 });
 
-// ৩. লাইভ অটো-সাজেস্ট API
+// ৩. কিবোর্ড নেভিগেশন (Arrow Up/Down, Enter)
+searchInput.addEventListener('keydown', (e) => {
+    const items = suggestionsList.querySelectorAll('li');
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (items.length > 0) {
+            selectedIndex = (selectedIndex + 1) % items.length;
+            updateSelection(items);
+        }
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (items.length > 0) {
+            selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+            updateSelection(items);
+        }
+    } else if (e.key === 'Enter') {
+        executeSearch();
+    }
+});
+
+function updateSelection(items) {
+    items.forEach((item, index) => {
+        if (index === selectedIndex) {
+            item.classList.add('selected');
+            searchInput.value = item.dataset.val;
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+// ৪. রিয়েলটাইম অটো-সাজেস্ট API
 async function fetchSuggestions(query) {
     try {
         const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://suggestqueries.google.com/complete/search?client=firefox&q=${query}`)}`;
@@ -46,7 +86,7 @@ async function fetchSuggestions(query) {
 
         renderSuggestions(suggestions);
     } catch (err) {
-        console.error(err);
+        console.error("Suggestion Fetch Error:", err);
     }
 }
 
@@ -54,9 +94,10 @@ function renderSuggestions(suggestions) {
     suggestionsList.innerHTML = '';
     if (suggestions.length === 0) return;
 
-    suggestions.slice(0, 5).forEach(term => {
+    suggestions.slice(0, 5).forEach((term) => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>🔍</span> <span>${term}</span>`;
+        li.dataset.val = term;
+        li.innerHTML = `<span>🔍</span> ${term}`;
         li.onclick = () => {
             searchInput.value = term;
             suggestionsList.innerHTML = '';
@@ -66,52 +107,73 @@ function renderSuggestions(suggestions) {
     });
 }
 
-// ৪. ট্রেন্ডিং আইটেমে ক্লিক করলে সার্চ হওয়া
-document.querySelectorAll('#trendingList li').forEach(item => {
+// ৫. ট্রেন্ডিং আইটেম ক্লিক
+document.querySelectorAll('.trend-item').forEach(item => {
     item.addEventListener('click', function() {
-        const text = this.querySelector('span').textContent;
-        searchInput.value = text;
+        const query = this.dataset.query;
+        searchInput.value = query;
         clearBtn.style.display = 'block';
-        executeSearch(text);
+        executeSearch(query);
     });
 });
 
-// ৫. সার্চ এক্সিকিউশন
+// ৬. ভয়েস সার্চ
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    voiceBtn.addEventListener('click', () => {
+        recognition.start();
+        voiceBtn.style.color = '#ef4444';
+    });
+
+    recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        searchInput.value = transcript;
+        voiceBtn.style.color = '';
+        executeSearch(transcript);
+    };
+
+    recognition.onend = () => { voiceBtn.style.color = ''; };
+}
+
+// ৭. সার্চ রেজাল্ট ফেচ ও ডিসপ্লে
 async function executeSearch(queryStr) {
     const query = queryStr || searchInput.value.trim();
     suggestionsList.innerHTML = '';
     
     if (!query) return;
 
-    trendingSection.style.display = 'none';
-    resultsContainer.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">Searching for "${query}"...</p>`;
+    trendingBox.style.display = 'none';
+    categoryTabs.style.display = 'flex';
+    resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Wareligent খুঁজছে...</p>`;
 
     try {
         const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&origin=*`);
         const data = await res.json();
-        resultsContainer.innerHTML = '';
+        resultsWrapper.innerHTML = '';
 
         if (data.RelatedTopics && data.RelatedTopics.length > 0) {
             data.RelatedTopics.slice(0, 6).forEach(topic => {
                 if (topic.Text && topic.FirstURL) {
+                    const domain = new URL(topic.FirstURL).hostname;
                     const card = document.createElement('div');
                     card.className = 'result-card';
                     card.innerHTML = `
-                        <a href="${topic.FirstURL}" target="_blank">${topic.Text.split(' - ')[0]}</a>
-                        <p>${topic.Text}</p>
+                        <div class="result-header">
+                            <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" class="site-icon" alt="">
+                            <span class="site-url">${domain}</span>
+                        </div>
+                        <a href="${topic.FirstURL}" target="_blank" class="result-title">${topic.Text.split(' - ')[0]}</a>
+                        <p class="result-snippet">${topic.Text}</p>
                     `;
-                    resultsContainer.appendChild(card);
+                    resultsWrapper.appendChild(card);
                 }
             });
         } else {
-            resultsContainer.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">No results found.</p>`;
+            resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">কোনো ফলাফল পাওয়া যায়নি।</p>`;
         }
     } catch (err) {
-        resultsContainer.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">Error loading results.</p>`;
+        resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">তথ্য লোড করতে সমস্যা হয়েছে।</p>`;
     }
 }
-
-searchBtn.addEventListener('click', () => executeSearch());
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') executeSearch();
-});
