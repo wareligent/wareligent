@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wareligent Search</title>
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase Official SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -40,7 +39,7 @@
                 <ul id="suggestionsList" class="suggestions-box"></ul>
             </div>
 
-            <!-- ফিল্টার ক্যাটাগরি (সার্চ করার পর দেখাবে) -->
+            <!-- ফিল্টার ক্যাটাগরি -->
             <div class="category-tabs" id="categoryTabs" style="display: none;">
                 <button class="tab-chip active">All</button>
                 <button class="tab-chip">Images</button>
@@ -48,7 +47,7 @@
                 <button class="tab-chip">Videos</button>
             </div>
 
-            <!-- ট্রেন্ডিং টপিকস (ইউনিক গ্রিড) -->
+            <!-- ট্রেন্ডিং টপিকস -->
             <section class="trending-box" id="trendingBox">
                 <div class="trending-header">
                     <span>🔥 Trending Topics</span>
@@ -79,8 +78,8 @@
     </div>
 
     <script>
-        // --- SUPABASE INTEGRATION ---
-        const SUPABASE_URL = "https://supabase.co";
+        // --- SUPABASE INTEGRATION (CORRECTED CREDENTIALS) ---
+        const SUPABASE_URL = "https://xveccsbdrysuiwyuvodw.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_HkyRE170ylT0kkdZxbwUSQ_ihHrS_Ra";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -89,17 +88,23 @@
             if (!word) return;
             const cleanWord = word.trim().toLowerCase();
 
-            // Filter out empty queries, domains with dots, or queries shorter than 2 chars
-            if (!cleanWord || cleanWord.length < 2 || cleanWord.includes('.')) {
+            // খালি শব্দ বা ২ অক্ষরের চেয়ে ছোট লেখা বাদ দেওয়া
+            if (!cleanWord || cleanWord.length < 2) {
                 return;
             }
 
             try {
-                await supabaseClient
+                const { data, error } = await supabaseClient
                     .from("search_suggestions")
                     .upsert([{ keyword: cleanWord }], { onConflict: "keyword" });
+
+                if (error) {
+                    console.error("Supabase Save Error:", error.message);
+                } else {
+                    console.log("Database Save Success:", cleanWord);
+                }
             } catch (err) {
-                console.error("Database save error:", err);
+                console.error("Database Save Exception:", err);
             }
         }
 
@@ -117,7 +122,7 @@
         let selectedIndex = -1;
         let debounceTimer;
 
-        // SECTION 1: Theme Switcher (Dark/Light)
+        // SECTION 1: Theme Switcher
         themeToggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('dark-theme');
             document.body.classList.toggle('light-theme');
@@ -150,7 +155,7 @@
             trendingBox.style.display = 'block';
         });
 
-        // SECTION 3: Keyboard Navigation (Arrow Up/Down, Enter)
+        // SECTION 3: Keyboard Navigation
         searchInput.addEventListener('keydown', (e) => {
             const items = suggestionsList.querySelectorAll('li');
             if (e.key === 'ArrowDown') {
@@ -181,21 +186,22 @@
             });
         }
 
-        // SECTION 4: Real-time Auto-Suggest API (Google API via AllOrigins)
-        async function fetchSuggestions(query) {
-            try {
-                const targetUrl = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`;
-                const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                const suggestionsData = JSON.parse(data.contents);
-                const suggestions = suggestionsData[1] || [];
+        // SECTION 4: Real-time Auto-Suggest API (JSONP Method)
+        function fetchSuggestions(query) {
+            const oldScript = document.getElementById('jsonp-suggestions');
+            if (oldScript) oldScript.remove();
 
+            window.handleGoogleSuggestions = function(data) {
+                const suggestions = (data && data[1]) ? data[1] : [];
                 renderSuggestions(suggestions);
-            } catch (err) {
-                console.error("Suggestion Fetch Error:", err);
-            }
+            };
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-suggestions';
+            script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=handleGoogleSuggestions`;
+            script.onerror = () => renderSuggestions([]);
+            
+            document.body.appendChild(script);
         }
 
         function renderSuggestions(suggestions) {
@@ -245,17 +251,17 @@
             recognition.onend = () => { voiceBtn.style.color = ''; };
         }
 
-        // SECTION 7: Search Execution and Advanced Results Display
+        // SECTION 7: Search Execution and Website Redirection
         async function executeSearch(queryStr) {
             const query = (typeof queryStr === 'string' && queryStr.trim() !== '') ? queryStr.trim() : searchInput.value.trim();
             suggestionsList.innerHTML = '';
             
             if (!query) return;
 
-            // a. Save search word to database
-            saveSearchWordToDatabase(query);
+            // ডাটাবেজে সেভ হওয়া নিশ্চিত করার জন্য await
+            await saveSearchWordToDatabase(query);
 
-            // b. Direct Domain URL check
+            // ডোমেইন URL চেক
             const isDomain = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/.test(query);
             const hasProtocol = /^https?:\/\//i.test(query);
 
@@ -265,21 +271,17 @@
                 return;
             }
 
-            // c. General Search Handling
             trendingBox.style.display = 'none';
             categoryTabs.style.display = 'flex';
             resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Searching for "${query}"...</p>`;
 
-            // Open full Google Search in a new tab
             window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
 
-            // Fetch and render DuckDuckGo Instant Results inside resultsWrapper
             try {
                 const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&origin=*`);
                 const data = await res.json();
                 resultsWrapper.innerHTML = '';
 
-                // Wikipedia / Abstract Card
                 if (data.AbstractText) {
                     const card = document.createElement('div');
                     card.className = 'result-card';
@@ -294,7 +296,6 @@
                     resultsWrapper.appendChild(card);
                 }
 
-                // Related Topics / Links
                 if (data.RelatedTopics && data.RelatedTopics.length > 0) {
                     data.RelatedTopics.slice(0, 5).forEach(topic => {
                         if (topic.Text && topic.FirstURL) {
@@ -314,7 +315,6 @@
                     });
                 }
 
-                // Fallback message if no instant items were returned
                 if (resultsWrapper.innerHTML === '') {
                     resultsWrapper.innerHTML = `
                         <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
