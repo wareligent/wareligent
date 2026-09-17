@@ -75,19 +75,25 @@ function updateSelection(items) {
     });
 }
 
-// 4. Real-time Auto-Suggest API (Google API Integrated)
-async function fetchSuggestions(query) {
-    try {
-        const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://suggestqueries.google.com/complete/search?client=firefox&q=\${query}`)}`;
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        const suggestionsData = JSON.parse(data.contents);
-        const suggestions = suggestionsData[1] || [];
+// 4. Real-time Auto-Suggest API (JSONP Method)
+function fetchSuggestions(query) {
+    // আগের স্ক্রিপ্ট ট্যাগ থাকলে তা সরিয়ে ফেলা
+    const oldScript = document.getElementById('jsonp-suggestions');
+    if (oldScript) oldScript.remove();
 
+    // গুগলের ডাটা রিসিভ করার জন্য গ্লোবাল কলব্যাক ফাংশন
+    window.handleGoogleSuggestions = function(data) {
+        const suggestions = (data && data[1]) ? data[1] : [];
         renderSuggestions(suggestions);
-    } catch (err) {
-        console.error("Suggestion Fetch Error:", err);
-    }
+    };
+
+    // ডায়নামিকভাবে স্ক্রিপ্ট ট্যাগ তৈরি
+    const script = document.createElement('script');
+    script.id = 'jsonp-suggestions';
+    script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=handleGoogleSuggestions`;
+    script.onerror = () => renderSuggestions([]);
+    
+    document.body.appendChild(script);
 }
 
 function renderSuggestions(suggestions) {
