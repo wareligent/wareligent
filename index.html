@@ -3,35 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wareligent</title>
+    <title>Wareligent Search</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="light-theme">
 
-    <!-- থিম টগল বাটন -->
     <button id="themeToggleBtn" class="theme-toggle" title="Toggle Theme">
         <span id="themeIcon">🌙</span>
     </button>
 
     <div class="main-container">
-        <!-- Google/Bing স্টাইল লোগো -->
         <h1 class="brand-logo">wareligent</h1>
 
-        <!-- সার্চ বার -->
+        <!-- সার্চ বক্স -->
         <div class="search-box-container">
             <div class="search-input-wrapper">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" placeholder="Search the web with Wareligent..." autocomplete="off">
-                <button id="clearBtn" class="clear-btn" style="display: none;">✕</button>
+                <button id="voiceBtn" class="action-btn" title="Voice Search">🎙️</button>
+                <button id="clearBtn" class="action-btn" style="display: none;">✕</button>
             </div>
-            <!-- অটো-সাজেস্ট ড্রপডাউন -->
             <ul id="suggestionsList" class="suggestions-dropdown"></ul>
         </div>
 
-        <!-- ফলাফল ডোমেইন -->
+        <!-- ফিল্টার ট্যাব -->
+        <div class="search-tabs" id="searchTabs" style="display: none;">
+            <button class="tab-btn active" data-type="all">All</button>
+            <button class="tab-btn" data-type="images">Images</button>
+            <button class="tab-btn" data-type="news">News</button>
+        </div>
+
+        <!-- রেজাল্ট সেকশন -->
         <div id="resultsContainer" class="results-wrapper"></div>
     </div>
 
     <script src="script.js"></script>
+</body>
 </body>
 </html>
