@@ -11,14 +11,14 @@ const voiceBtn = document.getElementById('voiceBtn');
 let selectedIndex = -1;
 let debounceTimer;
 
-// ১. ডার্ক/লাইট থিম সুইচ
+// 1. Theme Switcher (Dark/Light)
 themeToggleBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
     document.body.classList.toggle('light-theme');
     themeIcon.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
 });
 
-// ২. ইনপুট ও ক্লিয়ার বাটন
+// 2. Input and Clear Button Handling
 searchInput.addEventListener('input', function() {
     const query = this.value.trim();
     clearBtn.style.display = query ? 'block' : 'none';
@@ -44,7 +44,7 @@ clearBtn.addEventListener('click', () => {
     trendingBox.style.display = 'block';
 });
 
-// ৩. কিবোর্ড নেভিগেশন (Arrow Up/Down, Enter)
+// 3. Keyboard Navigation (Arrow Up/Down, Enter)
 searchInput.addEventListener('keydown', (e) => {
     const items = suggestionsList.querySelectorAll('li');
     if (e.key === 'ArrowDown') {
@@ -75,7 +75,7 @@ function updateSelection(items) {
     });
 }
 
-// ৪. রিয়েলটাইম অটো-সাজেস্ট API
+// 4. Real-time Auto-Suggest API
 async function fetchSuggestions(query) {
     try {
         const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://suggestqueries.google.com/complete/search?client=firefox&q=${query}`)}`;
@@ -107,7 +107,7 @@ function renderSuggestions(suggestions) {
     });
 }
 
-// ৫. ট্রেন্ডিং আইটেম ক্লিক
+// 5. Trending Items Click Event
 document.querySelectorAll('.trend-item').forEach(item => {
     item.addEventListener('click', function() {
         const query = this.dataset.query;
@@ -117,7 +117,7 @@ document.querySelectorAll('.trend-item').forEach(item => {
     });
 });
 
-// ৬. ভয়েস সার্চ
+// 6. Voice Search
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -137,16 +137,17 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.onend = () => { voiceBtn.style.color = ''; };
 }
 
-// ৭. সার্চ রেজাল্ট ফেচ ও ডিসপ্লে
+// 7. Search Execution and Results Display
 async function executeSearch(queryStr) {
-    const query = queryStr || searchInput.value.trim();
+    // exact searched query capture
+    const query = (typeof queryStr === 'string' && queryStr.trim() !== '') ? queryStr.trim() : searchInput.value.trim();
     suggestionsList.innerHTML = '';
     
     if (!query) return;
 
     trendingBox.style.display = 'none';
     categoryTabs.style.display = 'flex';
-    resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Wareligent খুঁজছে...</p>`;
+    resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Searching for "${query}"...</p>`;
 
     try {
         const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&origin=*`);
@@ -154,7 +155,7 @@ async function executeSearch(queryStr) {
         resultsWrapper.innerHTML = '';
 
         if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-            data.RelatedTopics.slice(0, 6).forEach(topic => {
+            data.RelatedTopics.slice(0, 8).forEach(topic => {
                 if (topic.Text && topic.FirstURL) {
                     const domain = new URL(topic.FirstURL).hostname;
                     const card = document.createElement('div');
@@ -171,9 +172,9 @@ async function executeSearch(queryStr) {
                 }
             });
         } else {
-            resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">কোনো ফলাফল পাওয়া যায়নি।</p>`;
+            resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No results found for "${query}".</p>`;
         }
     } catch (err) {
-        resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">তথ্য লোড করতে সমস্যা হয়েছে।</p>`;
+        resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Failed to load search results. Please try again.</p>`;
     }
 }
