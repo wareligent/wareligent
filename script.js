@@ -1,3 +1,34 @@
+// --- 0. SUPABASE INTEGRATION ---
+const SUPABASE_URL = "https://xveccsbdrysuiwyuvodw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_HkyRE170ylT0kkdZxbwUSQ_ihHrS_Ra";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ডাটাবেজে সার্চ কিওয়ার্ড সেভ করার ফাংশন
+async function saveSearchWordToDatabase(word) {
+    if (!word) return;
+    const cleanWord = word.trim().toLowerCase();
+
+    // ফিল্টার: খালি, ডোমেইন নাম (.) বা ২ অক্ষরের ছোট কিওয়ার্ড বাদ যাবে
+    if (!cleanWord || cleanWord.length < 2 || cleanWord.includes('.')) {
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient
+            .from("search_suggestions")
+            .upsert([{ keyword: cleanWord }], { onConflict: "keyword" });
+
+        if (error) {
+            console.error("Supabase Error:", error.message);
+        } else {
+            console.log("Saved to database:", cleanWord);
+        }
+    } catch (err) {
+        console.error("Database Save Error:", err);
+    }
+}
+
+// --- DOM ELEMENTS ---
 const searchInput = document.getElementById('searchInput');
 const suggestionsList = document.getElementById('suggestionsList');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -77,17 +108,14 @@ function updateSelection(items) {
 
 // 4. Real-time Auto-Suggest API (JSONP Method)
 function fetchSuggestions(query) {
-    // আগের স্ক্রিপ্ট ট্যাগ থাকলে তা সরিয়ে ফেলা
     const oldScript = document.getElementById('jsonp-suggestions');
     if (oldScript) oldScript.remove();
 
-    // গুগলের ডাটা রিসিভ করার জন্য গ্লোবাল কলব্যাক ফাংশন
     window.handleGoogleSuggestions = function(data) {
         const suggestions = (data && data[1]) ? data[1] : [];
         renderSuggestions(suggestions);
     };
 
-    // ডায়নামিকভাবে স্ক্রিপ্ট ট্যাগ তৈরি
     const script = document.createElement('script');
     script.id = 'jsonp-suggestions';
     script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=handleGoogleSuggestions`;
@@ -143,33 +171,34 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.onend = () => { voiceBtn.style.color = ''; };
 }
 
-// 7. Search Execution and Smart Website Redirection
+// 7. Search Execution, Database Saving and Smart Website Redirection
 async function executeSearch(queryStr) {
     const query = (typeof queryStr === 'string' && queryStr.trim() !== '') ? queryStr.trim() : searchInput.value.trim();
     suggestionsList.innerHTML = '';
     
     if (!query) return;
 
-    // ১. চেক করা ইউজার সরাসরি ডোমেইন নাম বা URL লিখেছেন কি না (যেমন: facebook.com, http://example.com)
+    // ১. সুপাবেস ডাটাবেজে কিউয়ার্ড সেভ করা
+    await saveSearchWordToDatabase(query);
+
+    // ২. চেক করা ইউজার সরাসরি ডোমেইন নাম বা URL লিখেছেন কি না (যেমন: facebook.com, http://example.com)
     const isDomain = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/.test(query);
     const hasProtocol = /^https?:\/\//i.test(query);
 
-    // ২. যদি সরাসরি ওয়েবসাইট লেখা হয়, তবে ওই সাইটে নিয়ে যাবে
     if (isDomain || hasProtocol) {
         let finalUrl = query;
         if (!hasProtocol) {
-            finalUrl = `https://${query}`; // https না থাকলে যুক্ত করে নেওয়া
+            finalUrl = `https://${query}`;
         }
-        window.open(finalUrl, '_blank'); // নতুন ট্যাবে ওয়েবসাইট ওপেন হবে
+        window.open(finalUrl, '_blank');
         return;
     }
 
-    // ৩. যদি ওয়েবসাইট না হয়ে সাধারণ কোনো সার্চ কিওয়ার্ড হয়:
+    // ৩. সাধারণ সার্চ কিওয়ার্ড প্রসেসিং
     trendingBox.style.display = 'none';
     categoryTabs.style.display = 'flex';
     resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Searching for "${query}"...</p>`;
 
-    // ব্যাকগ্রাউন্ডে গুগলে সার্চ করার জন্য লিংক
     const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 
     try {
@@ -212,7 +241,6 @@ async function executeSearch(queryStr) {
             });
         }
 
-        // যদি রেজাল্ট না পাওয়া যায়
         if (resultsWrapper.innerHTML === '') {
             resultsWrapper.innerHTML = `
                 <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
@@ -230,4 +258,4 @@ async function executeSearch(queryStr) {
                 </a>
             </p>`;
     }
-}
+            }
