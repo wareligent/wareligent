@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,54 +8,72 @@
 </head>
 <body class="light-theme">
 
-    <!-- হেডার এরিয়া -->
-    <header class="top-header">
-        <div class="nav-links">
-            <a href="#" class="nav-item">Wareligent.com</a>
-        </div>
-        <div class="header-actions">
-            <button id="themeToggleBtn" class="icon-btn" title="Toggle Theme">🌙</button>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <!-- ব্রান্ড লোগো -->
-        <h1 class="brand-logo">wareligent<span>!</span></h1>
-
-        <!-- পিল-শেপড সার্চ বক্স -->
-        <div class="search-box-wrapper">
-            <div class="search-input-box">
-                <input type="text" id="searchInput" placeholder="Search the web with Wareligent..." autocomplete="off">
-                <button id="clearBtn" class="clear-btn" style="display: none;">✕</button>
-                <button id="voiceBtn" class="voice-btn" title="Voice Search">🎙️</button>
-                <button id="searchBtn" class="search-btn">🔍</button>
+    <div class="wrapper">
+        <!-- হেডার -->
+        <header class="navbar">
+            <div class="nav-brand">wareligent<span>.engine</span></div>
+            <div class="nav-actions">
+                <button id="themeToggleBtn" class="theme-btn" title="Toggle Theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
             </div>
-            <!-- অটো-সাজেস্ট ড্রপডাউন -->
-            <ul id="suggestionsList" class="suggestions-dropdown"></ul>
-        </div>
+        </header>
 
-        <!-- ফিল্টার ট্যাব (সার্চের পর আসবে) -->
-        <div class="search-tabs" id="searchTabs" style="display: none;">
-            <button class="tab-btn active">All</button>
-            <button class="tab-btn">Images</button>
-            <button class="tab-btn">News</button>
-        </div>
+        <main class="content-area">
+            <!-- ব্র্যান্ড লোগো -->
+            <div class="brand-container">
+                <h1 class="main-logo">wareligent</h1>
+                <p class="sub-text">Search the web intelligently</p>
+            </div>
 
-        <!-- ট্রেন্ডিং টপিক সেকশন (Yahoo Style) -->
-        <section class="trending-section" id="trendingSection">
-            <h2 class="trending-title">Trending Now 🔥</h2>
-            <ol class="trending-list" id="trendingList">
-                <li><span>Tech Innovations 2026</span><span class="search-icon-small">🔍</span></li>
-                <li><span>Wareligent Cloud Search</span><span class="search-icon-small">🔍</span></li>
-                <li><span>Global Gaming Championship</span><span class="search-icon-small">🔍</span></li>
-                <li><span>Artificial Intelligence News</span><span class="search-icon-small">🔍</span></li>
-                <li><span>Next.js & Web Development</span><span class="search-icon-small">🔍</span></li>
-            </ol>
-        </section>
+            <!-- সার্চ বক্স -->
+            <div class="search-section">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="যা খুশি সার্চ করুন..." autocomplete="off">
+                    <button id="clearBtn" class="action-btn" style="display: none;">✕</button>
+                    <button id="voiceBtn" class="action-btn" title="Voice Search">🎙️</button>
+                </div>
+                <ul id="suggestionsList" class="suggestions-box"></ul>
+            </div>
 
-        <!-- ফলাফল ডোমেইন -->
-        <div id="resultsContainer" class="results-wrapper"></div>
-    </main>
+            <!-- ফিল্টার ক্যাটাগরি (সার্চ করার পর দেখাবে) -->
+            <div class="category-tabs" id="categoryTabs" style="display: none;">
+                <button class="tab-chip active">All</button>
+                <button class="tab-chip">Images</button>
+                <button class="tab-chip">News</button>
+                <button class="tab-chip">Videos</button>
+            </div>
+
+            <!-- ট্রেন্ডিং টপিকস (ইউনিক গ্রিড) -->
+            <section class="trending-box" id="trendingBox">
+                <div class="trending-header">
+                    <span>🔥 Trending Topics</span>
+                </div>
+                <div class="trending-grid" id="trendingGrid">
+                    <div class="trend-item" data-query="Artificial Intelligence 2026">
+                        <span class="trend-no">01</span>
+                        <span class="trend-text">Artificial Intelligence</span>
+                    </div>
+                    <div class="trend-item" data-query="Latest Tech News">
+                        <span class="trend-no">02</span>
+                        <span class="trend-text">Latest Tech Updates</span>
+                    </div>
+                    <div class="trend-item" data-query="Global Space Exploration">
+                        <span class="trend-no">03</span>
+                        <span class="trend-text">Space Exploration</span>
+                    </div>
+                    <div class="trend-item" data-query="Web Development Trends">
+                        <span class="trend-no">04</span>
+                        <span class="trend-text">Web Development</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- সার্চ রেজাল্ট কন্টেইনার -->
+            <div id="resultsWrapper" class="results-container"></div>
+        </main>
+    </div>
 
     <script src="script.js"></script>
 </body>
