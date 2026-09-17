@@ -75,10 +75,10 @@ function updateSelection(items) {
     });
 }
 
-// 4. Real-time Auto-Suggest API
+// 4. Real-time Auto-Suggest API (Google API Integrated)
 async function fetchSuggestions(query) {
     try {
-        const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://suggestqueries.google.com/complete/search?client=firefox&q=${query}`)}`;
+        const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://suggestqueries.google.com/complete/search?client=firefox&q=\${query}`)}`;
         const response = await fetch(apiUrl);
         const data = await response.json();
         const suggestionsData = JSON.parse(data.contents);
@@ -137,25 +137,50 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.onend = () => { voiceBtn.style.color = ''; };
 }
 
-// 7. Search Execution and Results Display
+// 7. Search Execution and Advanced Results Display (Smart Web Redirection Attached)
 async function executeSearch(queryStr) {
-    // exact searched query capture
     const query = (typeof queryStr === 'string' && queryStr.trim() !== '') ? queryStr.trim() : searchInput.value.trim();
     suggestionsList.innerHTML = '';
     
     if (!query) return;
 
+    // ট্রিক ১: ইউজার যদি সরাসরি ডোমেইন নাম লেখে (যেমন: facebook.com), তবে সরাসরি সাইটে নিয়ে যাবে
+    const urlPattern = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}\$/;
+    if (urlPattern.test(query)) {
+        window.open(`https://${query}`, '_blank');
+        return;
+    }
+
     trendingBox.style.display = 'none';
     categoryTabs.style.display = 'flex';
     resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Searching for "${query}"...</p>`;
+
+    // ট্রিক ২: ব্যাকগ্রাউন্ডে গুগলের ফুল সার্চ রেজাল্ট পেজটি নতুন ট্যাবে ওপেন করে দেওয়া
+    window.open(`https://google.com{encodeURIComponent(query)}`, '_blank');
 
     try {
         const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&origin=*`);
         const data = await res.json();
         resultsWrapper.innerHTML = '';
 
+        // সাইটের ভেতরে মূল ইনফরমেশন বা উইকিপিডিয়া কার্ড দেখানো
+        if (data.AbstractText) {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            card.innerHTML = `
+                <div class="result-header">
+                    <img src="https://google.com" class="site-icon" alt="">
+                    <span class="site-url">${data.AbstractSource || 'Instant Answer'}</span>
+                </div>
+                <a href="${data.AbstractURL}" target="_blank" class="result-title">${data.Heading || query}</a>
+                <p class="result-snippet">${data.AbstractText}</p>
+            `;
+            resultsWrapper.appendChild(card);
+        }
+
+        // রিলেটেড টপিকস বা ওয়েবসাইট কার্ড দেখানো
         if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-            data.RelatedTopics.slice(0, 8).forEach(topic => {
+            data.RelatedTopics.slice(0, 5).forEach(topic => {
                 if (topic.Text && topic.FirstURL) {
                     const domain = new URL(topic.FirstURL).hostname;
                     const card = document.createElement('div');
@@ -171,10 +196,16 @@ async function executeSearch(queryStr) {
                     resultsWrapper.appendChild(card);
                 }
             });
-        } else {
-            resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No results found for "${query}".</p>`;
+        }
+
+        if (resultsWrapper.innerHTML === '') {
+            resultsWrapper.innerHTML = `
+                <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                    Instant results loaded in a new tab. <br>
+                    <a href="https://google.com{encodeURIComponent(query)}" target="_blank" style="color: var(--accent-color); text-decoration: underline;">Click here</a> if it didn't open automatically.
+                </p>`;
         }
     } catch (err) {
-        resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Failed to load search results. Please try again.</p>`;
+        resultsWrapper.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Results opened in a new window.</p>`;
     }
 }
